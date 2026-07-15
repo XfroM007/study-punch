@@ -2,6 +2,12 @@
 
 > 高三上学期古文背诵 + 英语单词离线打卡 · 单 HTML 网页应用
 
+## 🌐 在线访问（推荐）
+
+**永久链接**：https://xfrom007.github.io/study-punch/
+
+任何设备浏览器打开即可使用，支持 Windows / macOS / 安卓 / iOS，无需下载安装。
+
 ## 跨平台支持
 
 | 平台 | 系统要求 | 浏览器 | 操作 |
@@ -56,6 +62,13 @@ test-1/temp/2/
 - 「设置 → 导入 JSON」可从备份恢复
 
 ## 添加到主屏幕（像 App 一样用）
+
+### 在线版（PWA）推荐
+1. 浏览器打开 https://xfrom007.github.io/study-punch/
+2. 浏览器菜单 → "添加到主屏幕"
+3. 主屏出现"学习打卡"图标 → 像 App 一样使用
+
+### 本地版
 
 ### iOS / iPadOS
 1. 用 Safari 打开 `index.html`

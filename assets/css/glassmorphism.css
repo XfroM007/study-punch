@@ -1,0 +1,454 @@
+/* ============================================================
+ * 深空玻璃拟态 · Glassmorphism Component Library
+ * ------------------------------------------------------------
+ * 深空蓝黑 → 紫蓝径向渐变 + 星点背景
+ * 玻璃面板：blur + 半透明白 + 1px 边框 + 多层阴影
+ * 强调色：霓虹青 #00f5ff / 紫粉 #ff006e
+ * ============================================================ */
+
+/* ---------- Design Tokens ---------- */
+:root {
+  /* 主色（深空） */
+  --c-bg-deep: #0a0e27;
+  --c-bg-mid: #14123a;
+  --c-bg-violet: #1e1b4b;
+
+  /* 强调色 */
+  --c-neon-cyan: #00f5ff;
+  --c-neon-cyan-soft: rgba(0, 245, 255, 0.18);
+  --c-neon-pink: #ff006e;
+  --c-neon-pink-soft: rgba(255, 0, 110, 0.18);
+  --c-neon-purple: #a855f7;
+
+  /* 玻璃表面 */
+  --c-glass-bg: rgba(255, 255, 255, 0.06);
+  --c-glass-bg-strong: rgba(255, 255, 255, 0.10);
+  --c-glass-border: rgba(255, 255, 255, 0.14);
+  --c-glass-border-strong: rgba(255, 255, 255, 0.22);
+
+  /* 文字 */
+  --c-text-primary: rgba(255, 255, 255, 0.96);
+  --c-text-secondary: rgba(255, 255, 255, 0.72);
+  --c-text-muted: rgba(255, 255, 255, 0.48);
+
+  /* 圆角 */
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+
+  /* 阴影 */
+  --shadow-glass:
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  --shadow-glass-strong:
+    0 16px 48px rgba(0, 0, 0, 0.55),
+    0 4px 16px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  --shadow-glow-cyan:
+    0 0 24px rgba(0, 245, 255, 0.45),
+    0 0 48px rgba(0, 245, 255, 0.20);
+  --shadow-glow-pink:
+    0 0 24px rgba(255, 0, 110, 0.45),
+    0 0 48px rgba(255, 0, 110, 0.20);
+
+  /* 动效 */
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+  --t-fast: 180ms;
+  --t-base: 300ms;
+  --t-slow: 500ms;
+}
+
+/* ---------- Reset ---------- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC",
+    "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--c-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+input, textarea {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  outline: none;
+}
+
+/* ============================================================
+ * 深空背景：径向渐变 + 星点
+ * ============================================================ */
+.bg-deep-space {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%,
+      rgba(168, 85, 247, 0.32) 0%,
+      transparent 55%),
+    radial-gradient(ellipse 70% 80% at 85% 90%,
+      rgba(0, 245, 255, 0.22) 0%,
+      transparent 55%),
+    radial-gradient(ellipse 100% 100% at 50% 50%,
+      var(--c-bg-violet) 0%,
+      var(--c-bg-deep) 60%,
+      #050816 100%);
+}
+
+/* 星点层：多 box-shadow 模拟（无需 SVG） */
+.bg-stars {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.bg-stars::before,
+.bg-stars::after {
+  content: "";
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  background: transparent;
+}
+/* 第一层星：密集小星 */
+.bg-stars::before {
+  top: 50%;
+  left: 50%;
+  box-shadow:
+    24px 88px #fff, 188px 340px #fff, 320px 120px #cce8ff,
+    480px 220px #fff, 620px 460px #fff, 760px 80px #ffd9f5,
+    880px 320px #fff, 1020px 540px #cce8ff, 1180px 200px #fff,
+    60px 520px #fff, 200px 660px #fff, 380px 720px #cce8ff,
+    540px 800px #fff, 700px 940px #fff, 860px 1080px #ffd9f5,
+    1000px 880px #fff, 1160px 1020px #fff, 1320px 940px #cce8ff,
+    40px 1200px #fff, 220px 1340px #fff, 400px 1480px #fff,
+    580px 1280px #cce8ff, 740px 1400px #fff, 920px 1520px #fff,
+    1080px 1320px #ffd9f5, 1260px 1480px #fff,
+    1440px 60px #fff, 1600px 200px #cce8ff, 1760px 380px #fff,
+    1480px 540px #fff, 1640px 720px #fff, 1800px 900px #cce8ff,
+    1500px 1100px #fff, 1680px 1280px #ffd9f5, 1860px 1440px #fff,
+    120px 1600px #fff, 320px 1740px #fff, 540px 1860px #cce8ff,
+    720px 1700px #fff, 900px 1880px #fff, 1080px 1720px #ffd9f5,
+    1280px 1860px #fff, 1440px 1740px #fff, 1620px 1880px #cce8ff,
+    1800px 1720px #fff, 1920px 1860px #fff;
+  animation: starTwinkle 6s ease-in-out infinite alternate;
+}
+/* 第二层星：稀疏大星 */
+.bg-stars::after {
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 2px;
+  box-shadow:
+    140px 240px #fff, 460px 120px #cce8ff, 720px 380px #ffd9f5,
+    980px 160px #fff, 1240px 460px #cce8ff, 1500px 220px #fff,
+    1760px 540px #ffd9f5, 220px 780px #fff, 580px 980px #cce8ff,
+    880px 1100px #fff, 1180px 920px #ffd9f5, 1480px 1080px #fff,
+    1820px 1240px #cce8ff, 320px 1380px #fff, 660px 1520px #ffd9f5,
+    1020px 1640px #cce8ff, 1360px 1500px #fff, 1700px 1620px #ffd9f5;
+  animation: starTwinkle 9s ease-in-out infinite alternate-reverse;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
+}
+@keyframes starTwinkle {
+  from { opacity: 0.55; }
+  to   { opacity: 1; }
+}
+
+/* ============================================================
+ * 玻璃面板（核心组件）
+ * ============================================================ */
+.glass {
+  position: relative;
+  background: var(--c-glass-bg);
+  border: 1px solid var(--c-glass-border);
+  border-radius: var(--r-md);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: var(--shadow-glass);
+  overflow: hidden;
+}
+.glass::before {
+  /* 顶部高光带 */
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.32) 50%,
+    transparent 100%);
+  pointer-events: none;
+}
+
+.glass-strong {
+  background: var(--c-glass-bg-strong);
+  border-color: var(--c-glass-border-strong);
+  box-shadow: var(--shadow-glass-strong);
+}
+
+.glass-rounded-lg { border-radius: var(--r-lg); }
+.glass-rounded-xl { border-radius: var(--r-xl); }
+
+/* 霓虹边框变体 */
+.glass-neon-cyan {
+  border-color: rgba(0, 245, 255, 0.45);
+  box-shadow:
+    var(--shadow-glass),
+    inset 0 0 24px rgba(0, 245, 255, 0.08),
+    0 0 28px rgba(0, 245, 255, 0.18);
+}
+.glass-neon-pink {
+  border-color: rgba(255, 0, 110, 0.45);
+  box-shadow:
+    var(--shadow-glass),
+    inset 0 0 24px rgba(255, 0, 110, 0.08),
+    0 0 28px rgba(255, 0, 110, 0.18);
+}
+
+/* ============================================================
+ * 按钮
+ * ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 12px 24px;
+  border-radius: var(--r-md);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  transition: all var(--t-base) var(--ease-soft);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: linear-gradient(135deg,
+    rgba(0, 245, 255, 0.95) 0%,
+    rgba(168, 85, 247, 0.95) 100%);
+  color: #0a0e27;
+  box-shadow:
+    0 8px 24px rgba(0, 245, 255, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 12px 32px rgba(0, 245, 255, 0.50),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.btn-ghost {
+  background: var(--c-glass-bg);
+  border: 1px solid var(--c-glass-border);
+  color: var(--c-text-primary);
+  backdrop-filter: blur(12px);
+}
+.btn-ghost:hover {
+  background: var(--c-glass-bg-strong);
+  border-color: var(--c-glass-border-strong);
+}
+
+.btn-neon-cyan {
+  background: rgba(0, 245, 255, 0.10);
+  border: 1px solid rgba(0, 245, 255, 0.55);
+  color: var(--c-neon-cyan);
+  box-shadow: var(--shadow-glow-cyan);
+}
+.btn-neon-cyan:hover { background: rgba(0, 245, 255, 0.18); }
+
+.btn-neon-pink {
+  background: rgba(255, 0, 110, 0.10);
+  border: 1px solid rgba(255, 0, 110, 0.55);
+  color: var(--c-neon-pink);
+  box-shadow: var(--shadow-glow-pink);
+}
+.btn-neon-pink:hover { background: rgba(255, 0, 110, 0.18); }
+
+.btn-block { width: 100%; }
+
+/* ============================================================
+ * 输入框（玻璃）
+ * ============================================================ */
+.input {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--c-glass-border);
+  border-radius: var(--r-sm);
+  color: var(--c-text-primary);
+  font-size: 16px;
+  backdrop-filter: blur(8px);
+  transition: all var(--t-base) var(--ease-soft);
+}
+.input:focus {
+  border-color: var(--c-neon-cyan);
+  box-shadow: 0 0 0 3px rgba(0, 245, 255, 0.18);
+}
+.input::placeholder { color: var(--c-text-muted); }
+
+/* ============================================================
+ * 标签 / 徽章
+ * ============================================================ */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  background: rgba(0, 245, 255, 0.12);
+  color: var(--c-neon-cyan);
+  border: 1px solid rgba(0, 245, 255, 0.28);
+}
+.tag-pink {
+  background: rgba(255, 0, 110, 0.12);
+  color: var(--c-neon-pink);
+  border-color: rgba(255, 0, 110, 0.28);
+}
+.tag-violet {
+  background: rgba(168, 85, 247, 0.12);
+  color: var(--c-neon-purple);
+  border-color: rgba(168, 85, 247, 0.28);
+}
+.tag-glass {
+  background: var(--c-glass-bg);
+  color: var(--c-text-secondary);
+  border-color: var(--c-glass-border);
+  backdrop-filter: blur(8px);
+}
+
+/* ============================================================
+ * 进度条
+ * ============================================================ */
+.progress {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg,
+    var(--c-neon-cyan) 0%,
+    var(--c-neon-purple) 100%);
+  box-shadow: 0 0 12px rgba(0, 245, 255, 0.55);
+  transition: width var(--t-slow) var(--ease-soft);
+}
+.progress-pink .progress-fill {
+  background: linear-gradient(90deg,
+    var(--c-neon-pink) 0%,
+    var(--c-neon-purple) 100%);
+  box-shadow: 0 0 12px rgba(255, 0, 110, 0.55);
+}
+
+/* ============================================================
+ * 3D 翻转卡（成就卡牌用）
+ * ============================================================ */
+.flip-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  perspective: 1000px;
+}
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.7s var(--ease-soft);
+  transform-style: preserve-3d;
+}
+.flip-card.is-flipped .flip-card-inner {
+  transform: rotateY(180deg);
+}
+.flip-card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.flip-card-back {
+  transform: rotateY(180deg);
+}
+
+/* ============================================================
+ * 实用类
+ * ============================================================ */
+.text-cyan { color: var(--c-neon-cyan); }
+.text-pink { color: var(--c-neon-pink); }
+.text-violet { color: var(--c-neon-purple); }
+.text-secondary { color: var(--c-text-secondary); }
+.text-muted { color: var(--c-text-muted); }
+
+.row { display: flex; align-items: center; gap: 12px; }
+.col { display: flex; flex-direction: column; gap: 12px; }
+.spacer { flex: 1; }
+
+/* ============================================================
+ * 粒子扩散动画（打卡成功用）
+ * ============================================================ */
+.particle-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c-neon-cyan);
+  box-shadow: 0 0 12px var(--c-neon-cyan);
+  animation: burst 1.2s var(--ease-soft) forwards;
+}
+@keyframes burst {
+  0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--dx, 80px), var(--dy, -80px)) scale(0); opacity: 0; }
+}
+
+/* ============================================================
+ * 响应式
+ * ============================================================ */
+@media (max-width: 768px) {
+  html, body { font-size: 15px; }
+}
+@media (max-width: 480px) {
+  html, body { font-size: 14px; }
+  .btn { min-height: 44px; padding: 12px 18px; font-size: 14px; }
+}

@@ -1,0 +1,494 @@
+/* ============================================================
+ * 主页布局 · main.css
+ * ------------------------------------------------------------
+ * 应用容器、顶部状态栏、今日打卡卡片、三栏统计、底部 Tab
+ * ============================================================ */
+
+.app {
+  position: relative;
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 20px 16px 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ---------- 顶部状态栏 ---------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+}
+.topbar-date {
+  font-size: 14px;
+  color: var(--c-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.topbar-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+}
+.topbar-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.topbar-stat-num {
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(135deg,
+    var(--c-neon-cyan) 0%,
+    var(--c-neon-purple) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.topbar-stat-num.pink {
+  background: linear-gradient(135deg,
+    var(--c-neon-pink) 0%,
+    var(--c-neon-purple) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ---------- 今日打卡卡片 ---------- */
+.today-card {
+  position: relative;
+  padding: 28px 24px;
+  border-radius: var(--r-lg);
+}
+.today-card::after {
+  /* 渐变光晕 */
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: var(--r-lg);
+  background: linear-gradient(135deg,
+    rgba(0, 245, 255, 0.45) 0%,
+    transparent 40%,
+    transparent 60%,
+    rgba(255, 0, 110, 0.45) 100%);
+  z-index: -1;
+  filter: blur(12px);
+  opacity: 0.7;
+}
+.today-card-label {
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: var(--c-neon-cyan);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.today-card-title {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+}
+.today-card-author {
+  color: var(--c-text-secondary);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+.today-card-meta {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.today-card-desc {
+  font-size: 14px;
+  color: var(--c-text-secondary);
+  line-height: 1.7;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--r-sm);
+  border-left: 2px solid var(--c-neon-cyan);
+  font-family: "PingFang SC", "Microsoft YaHei", serif;
+}
+.today-card-actions {
+  display: flex;
+  gap: 12px;
+}
+.today-card-actions .btn { flex: 1; }
+
+/* ---------- 三栏统计 ---------- */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.stat-card {
+  padding: 18px 14px;
+  text-align: center;
+  border-radius: var(--r-md);
+  transition: transform var(--t-base) var(--ease-soft);
+}
+.stat-card:hover { transform: translateY(-2px); }
+.stat-card-icon {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 8px;
+  opacity: 0.85;
+}
+.stat-card-num {
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-card-num.cyan {
+  background: linear-gradient(135deg, var(--c-neon-cyan), var(--c-neon-purple));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.stat-card-num.pink {
+  background: linear-gradient(135deg, var(--c-neon-pink), var(--c-neon-purple));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.stat-card-num.violet {
+  background: linear-gradient(135deg, var(--c-neon-purple), var(--c-neon-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.stat-card-label {
+  font-size: 12px;
+  color: var(--c-text-secondary);
+  letter-spacing: 0.05em;
+}
+
+/* ---------- 快捷区 ---------- */
+.quick-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.quick-tile {
+  padding: 18px;
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform var(--t-base) var(--ease-soft);
+}
+.quick-tile:hover { transform: translateY(-2px); }
+.quick-tile-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(0, 245, 255, 0.14);
+  color: var(--c-neon-cyan);
+}
+.quick-tile-icon.pink {
+  background: rgba(255, 0, 110, 0.14);
+  color: var(--c-neon-pink);
+}
+.quick-tile-text { flex: 1; }
+.quick-tile-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.quick-tile-sub {
+  font-size: 12px;
+  color: var(--c-text-muted);
+}
+
+/* ---------- 底部 Tab 栏 ---------- */
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  padding: 10px 16px 18px;
+  z-index: 100;
+}
+.tabbar-inner {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 8px;
+  border-radius: var(--r-lg);
+}
+.tab-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  border-radius: var(--r-sm);
+  color: var(--c-text-muted);
+  transition: all var(--t-base) var(--ease-soft);
+  min-height: 56px;
+}
+.tab-btn svg { width: 22px; height: 22px; }
+.tab-btn-label {
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}
+.tab-btn:hover { color: var(--c-text-secondary); }
+.tab-btn.active {
+  color: var(--c-neon-cyan);
+  background: rgba(0, 245, 255, 0.10);
+  box-shadow: inset 0 0 0 1px rgba(0, 245, 255, 0.35),
+              0 0 16px rgba(0, 245, 255, 0.18);
+}
+.tab-btn.active.pink {
+  color: var(--c-neon-pink);
+  background: rgba(255, 0, 110, 0.10);
+  box-shadow: inset 0 0 0 1px rgba(255, 0, 110, 0.35),
+              0 0 16px rgba(255, 0, 110, 0.18);
+}
+
+/* ---------- 页面切换 ---------- */
+.page {
+  display: none;
+  animation: pageIn var(--t-slow) var(--ease-soft);
+}
+.page.active { display: flex; flex-direction: column; gap: 20px; }
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 380px) {
+  .app { padding: 14px 12px 96px; gap: 16px; }
+  .today-card { padding: 22px 18px; }
+  .today-card-title { font-size: 22px; }
+  .stat-card { padding: 14px 10px; }
+  .stat-card-num { font-size: 20px; }
+}
+/* ========== 启动页（深空星舰） ========== */
+#boot-screen {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, #0a0e27 0%, #050816 100%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: opacity 0.8s ease-out;
+}
+#boot-screen.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+.boot-stars {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1px 1px at 60px 70px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 130px 40px, rgba(0,245,255,0.7), transparent),
+    radial-gradient(1px 1px at 200px 90px, rgba(255,255,255,0.5), transparent),
+    radial-gradient(2px 2px at 280px 150px, rgba(255,0,110,0.6), transparent),
+    radial-gradient(1px 1px at 340px 60px, rgba(255,255,255,0.7), transparent);
+  background-repeat: repeat;
+  background-size: 360px 200px;
+  animation: star-twinkle 3s ease-in-out infinite alternate;
+}
+@keyframes star-twinkle {
+  0% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+.boot-orb {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #00f5ff 0%, #1e1b4b 60%, #0a0e27 100%);
+  box-shadow:
+    0 0 60px rgba(0, 245, 255, 0.6),
+    inset 0 0 30px rgba(0, 245, 255, 0.4);
+  animation: orb-pulse 2.5s ease-in-out infinite;
+  position: relative;
+  z-index: 2;
+}
+@keyframes orb-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 60px rgba(0,245,255,0.6), inset 0 0 30px rgba(0,245,255,0.4); }
+  50% { transform: scale(1.08); box-shadow: 0 0 100px rgba(0,245,255,0.9), inset 0 0 40px rgba(0,245,255,0.6); }
+}
+.boot-ring {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border: 1.5px solid rgba(0, 245, 255, 0.3);
+  border-radius: 50%;
+  animation: ring-spin 4s linear infinite;
+  z-index: 1;
+}
+.boot-ring.r2 {
+  width: 260px;
+  height: 260px;
+  border-color: rgba(255, 0, 110, 0.25);
+  animation: ring-spin 6s linear infinite reverse;
+}
+@keyframes ring-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.boot-title {
+  margin-top: 32px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  background: linear-gradient(90deg, #00f5ff, #ff006e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  z-index: 2;
+  animation: title-fade 1.5s ease-out 0.5s both;
+}
+.boot-sub {
+  margin-top: 12px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.4em;
+  z-index: 2;
+  animation: title-fade 1.5s ease-out 0.9s both;
+}
+.boot-progress {
+  margin-top: 36px;
+  width: 200px;
+  height: 2px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  z-index: 2;
+}
+.boot-progress-bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #00f5ff, #ff006e);
+  border-radius: 2px;
+  animation: boot-load 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  box-shadow: 0 0 12px rgba(0, 245, 255, 0.6);
+}
+@keyframes boot-load {
+  0% { width: 0; }
+  60% { width: 70%; }
+  100% { width: 100%; }
+}
+@keyframes title-fade {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== 粒子扩散特效 ========== */
+#particle-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+}
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: particle-fly 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+@keyframes particle-fly {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0);
+    opacity: 0;
+  }
+}
+
+/* ========== 进度折线图 ========== */
+.trend-chart {
+  padding: 16px 20px 20px;
+  position: relative;
+}
+.trend-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.trend-tab {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: rgba(255,255,255,0.05);
+  color: var(--c-text-muted);
+  border: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.trend-tab.active {
+  background: linear-gradient(135deg, rgba(0,245,255,0.2), rgba(255,0,110,0.2));
+  color: var(--c-text);
+  border-color: rgba(0,245,255,0.4);
+  box-shadow: 0 0 16px rgba(0,245,255,0.3);
+}
+.trend-svg {
+  width: 100%;
+  height: 140px;
+  display: block;
+}
+.trend-grid-line {
+  stroke: rgba(255,255,255,0.05);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+.trend-axis-label {
+  fill: rgba(255,255,255,0.4);
+  font-size: 9px;
+  font-family: monospace;
+}
+.trend-area {
+  fill: url(#trendGradient);
+  opacity: 0.4;
+}
+.trend-line {
+  fill: none;
+  stroke: url(#trendStroke);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 6px rgba(0,245,255,0.6));
+}
+.trend-dot {
+  fill: #00f5ff;
+  stroke: #fff;
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 4px rgba(0,245,255,0.8));
+}
+.trend-dot-empty {
+  fill: rgba(255,255,255,0.2);
+  stroke: rgba(255,255,255,0.3);
+  stroke-width: 1;
+}
+.trend-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--c-text-muted);
+  font-size: 12px;
+}

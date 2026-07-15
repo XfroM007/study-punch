@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0e27" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./assets/img/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="学习打卡" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>学习打卡 · 深空玻璃拟态</title>
+  <link rel="stylesheet" href="./assets/css/glassmorphism.css" />
+  <link rel="stylesheet" href="./assets/css/main.css" />
+  <link rel="stylesheet" href="./assets/css/punch.css" />
+  <style>
+    html, body { background: #050816; }
+  </style>
+</head>
+<body>
+  <!-- 深空背景层 -->
+  <div class="bg-deep-space"></div>
+  <div class="bg-stars"></div>
+
+  <!-- ===================== 启动页 ===================== -->
+  <div id="boot-screen">
+    <div class="boot-stars"></div>
+    <div class="boot-ring"></div>
+    <div class="boot-ring r2"></div>
+    <div class="boot-orb"></div>
+    <div class="boot-title">学习打卡</div>
+    <div class="boot-sub">STUDY · PUNCH</div>
+    <div class="boot-progress"><div class="boot-progress-bar"></div></div>
+  </div>
+
+  <!-- ===================== 粒子画布 ===================== -->
+  <div id="particle-canvas"></div>
+
+  <!-- ===================== 主页 ===================== -->
+  <main class="app">
+
+    <!-- ============ Page: Home ============ -->
+    <section class="page active" id="page-home">
+
+      <!-- 顶部状态栏 -->
+      <div class="glass topbar">
+        <div class="topbar-date" id="topbar-date">--月--日 · 周-</div>
+        <div class="topbar-stats">
+          <div class="topbar-stat">
+            <span>连续</span>
+            <span class="topbar-stat-num" id="topbar-streak-num">0</span>
+            <span>天</span>
+          </div>
+          <div class="topbar-stat">
+            <span>积分</span>
+            <span class="topbar-stat-num pink" id="topbar-points-num">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 今日打卡卡片 -->
+      <div class="glass glass-strong glass-neon-cyan today-card">
+        <div class="today-card-label">Today's Quest · 今日打卡</div>
+        <div class="today-card-title" id="today-title">劝学</div>
+        <div class="today-card-author" id="today-author">战国 · 荀子</div>
+        <div class="today-card-meta" id="today-tags">
+          <span class="tag">难度 ★★★★</span>
+          <span class="tag tag-pink">待打卡</span>
+        </div>
+        <div class="today-card-desc" id="today-desc">
+          <div>学不可以已。</div>
+          <div>青，取之于蓝，而青于蓝。</div>
+        </div>
+        <div class="row" style="margin-bottom:16px; gap:10px;">
+          <div class="classic-progress" style="flex:1;">
+            <div class="progress" style="flex:1;">
+              <div class="progress-fill" id="today-progress-fill" style="width:0%;"></div>
+            </div>
+            <div class="classic-progress-text" id="today-progress-text">0 / 6</div>
+          </div>
+        </div>
+        <div class="today-card-actions">
+          <button class="btn btn-ghost" onclick="App.openClassicPunch()">古文打卡</button>
+          <button class="btn btn-primary" id="btn-start-today" onclick="App.openClassicPunch()">开始今日打卡</button>
+        </div>
+      </div>
+
+      <!-- 三栏统计 -->
+      <div class="stats-row">
+        <div class="glass stat-card">
+          <svg class="stat-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--c-neon-cyan);">
+            <path d="M4 4h12a4 4 0 014 4v12H8a4 4 0 01-4-4V4z"/>
+            <path d="M4 4v16M8 8h8M8 12h6"/>
+          </svg>
+          <div class="stat-card-num cyan"><span id="stat-classic-num">0</span><span style="font-size:14px; color:var(--c-text-muted);" id="stat-classic-sub">/ 14</span></div>
+          <div class="stat-card-label">已读古文</div>
+        </div>
+        <div class="glass stat-card">
+          <svg class="stat-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--c-neon-pink);">
+            <path d="M4 6h16M4 12h10M4 18h16"/>
+            <circle cx="18" cy="12" r="2"/>
+          </svg>
+          <div class="stat-card-num pink"><span id="stat-words-num">0</span></div>
+          <div class="stat-card-label">累计单词</div>
+        </div>
+        <div class="glass stat-card">
+          <svg class="stat-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--c-neon-purple);">
+            <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/>
+          </svg>
+          <div class="stat-card-num violet"><span id="stat-achievement-num">0</span><span style="font-size:14px; color:var(--c-text-muted);" id="stat-achievement-sub">/ 12</span></div>
+          <div class="stat-card-label">成就卡牌</div>
+        </div>
+      </div>
+
+      <!-- 快捷入口 -->
+      <div class="quick-row">
+        <div class="glass quick-tile" onclick="App.openClassicPunch()">
+          <div class="quick-tile-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h12a4 4 0 014 4v12H8a4 4 0 01-4-4V4z"/></svg>
+          </div>
+          <div class="quick-tile-text">
+            <div class="quick-tile-title">古文打卡</div>
+            <div class="quick-tile-sub">逐句核对</div>
+          </div>
+        </div>
+        <div class="glass quick-tile" onclick="App.openWordPunch()">
+          <div class="quick-tile-icon pink">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h16"/></svg>
+          </div>
+          <div class="quick-tile-text">
+            <div class="quick-tile-title">单词打卡</div>
+            <div class="quick-tile-sub">20 词 / 天</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部 Tab -->
+      <nav class="tabbar">
+        <div class="glass tabbar-inner">
+          <button class="tab-btn active" data-target="home">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10h4v-6h6v6h4V10"/></svg>
+            <span class="tab-btn-label">打卡</span>
+          </button>
+          <button class="tab-btn" data-target="progress">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 14l4-4 4 4 5-7"/></svg>
+            <span class="tab-btn-label">进度</span>
+          </button>
+          <button class="tab-btn" data-target="achievement">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+            <span class="tab-btn-label">成就</span>
+          </button>
+          <button class="tab-btn" data-target="settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33h.01a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51h.01a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v.01a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            <span class="tab-btn-label">设置</span>
+          </button>
+        </div>
+      </nav>
+
+    </section>
+
+    <!-- ============ Page: 古文打卡 ============ -->
+    <section class="page" id="page-classic">
+      <div class="glass punch-header">
+        <div class="punch-header-row">
+          <button class="punch-back" onclick="App.switchPage('home')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+            返回
+          </button>
+          <div class="punch-title-block">
+            <div class="punch-title" id="classic-title">劝学</div>
+            <div class="punch-subtitle" id="classic-subtitle">战国 · 荀子</div>
+          </div>
+          <div style="width:60px;"></div>
+        </div>
+        <div class="classic-progress">
+          <div class="progress" style="flex:1;">
+            <div class="progress-fill" id="classic-progress-fill" style="width:0%;"></div>
+          </div>
+          <div class="classic-progress-text" id="classic-progress-text">0 / 6</div>
+        </div>
+      </div>
+
+      <div class="glass classic-text" id="classic-text"></div>
+
+      <div class="glass classic-input-area" id="classic-input-area"></div>
+    </section>
+
+    <!-- ============ Page: 单词打卡 ============ -->
+    <section class="page" id="page-word">
+      <div class="glass punch-header">
+        <div class="punch-header-row">
+          <button class="punch-back" onclick="App.switchPage('home')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+            返回
+          </button>
+          <div class="punch-title-block">
+            <div class="punch-title">单词打卡</div>
+            <div class="punch-subtitle">点击卡片翻转释义</div>
+          </div>
+          <div style="width:60px;"></div>
+        </div>
+        <div class="classic-progress">
+          <div class="progress" style="flex:1;">
+            <div class="progress-fill" id="word-progress-fill" style="width:0%;"></div>
+          </div>
+          <div class="classic-progress-text" id="word-progress-text">0 / 20</div>
+        </div>
+        <div class="word-mode-row">
+          <button class="word-mode-btn active" data-mode="en2zh">英 → 中</button>
+          <button class="word-mode-btn" data-mode="zh2en">中 → 英</button>
+          <button class="word-mode-btn" data-mode="spelling">拼写</button>
+        </div>
+      </div>
+
+      <div class="glass glass-strong word-card" id="word-card">
+        <div class="word-card-inner">
+          <div class="word-card-face">
+            <div class="word-en" id="word-en">ability</div>
+            <div class="word-phonetic" id="word-phonetic">/əˈbɪləti/</div>
+            <div class="word-hint">点击卡片查看释义 · / 翻 →</div>
+          </div>
+          <div class="word-card-face word-card-back">
+            <div class="word-zh" id="word-zh">能力；才能<small id="word-example">She has the ability to succeed.</small></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="word-input-area"></div>
+    </section>
+
+    <!-- ============ Page: 进度 ============ -->
+    <section class="page" id="page-progress">
+      <div class="glass punch-header">
+        <div class="punch-header-row">
+          <div style="width:60px;"></div>
+          <div class="punch-title-block">
+            <div class="punch-title">进度</div>
+            <div class="punch-subtitle">学习轨迹</div>
+          </div>
+          <div style="width:60px;"></div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="glass stat-card">
+          <div class="stat-card-num cyan" id="prog-stat-streak">0</div>
+          <div class="stat-card-label">连续天数</div>
+        </div>
+        <div class="glass stat-card">
+          <div class="stat-card-num pink" id="prog-stat-days">0</div>
+          <div class="stat-card-label">累计天数</div>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="glass stat-card">
+          <div class="stat-card-num violet" id="prog-stat-classic">0</div>
+          <div class="stat-card-label">完读篇目</div>
+        </div>
+        <div class="glass stat-card">
+          <div class="stat-card-num cyan" id="prog-stat-words">0</div>
+          <div class="stat-card-label">累计单词</div>
+        </div>
+      </div>
+
+      <div class="glass">
+        <div style="padding:16px 20px 8px;">
+          <div style="font-size:14px; font-weight:600; letter-spacing:0.05em;">📅 最近 90 天</div>
+          <div style="font-size:12px; color:var(--c-text-muted); margin-top:2px;">颜色越亮 = 完成量越大</div>
+        </div>
+        <div class="heatmap" id="heatmap"></div>
+      </div>
+
+      <!-- 趋势折线图 -->
+      <div class="glass trend-chart">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <div style="font-size:14px; font-weight:600; letter-spacing:0.05em;">📈 打卡趋势</div>
+          <div class="trend-tabs">
+            <button class="trend-tab" data-range="7">近 7 天</button>
+            <button class="trend-tab active" data-range="30">近 30 天</button>
+            <button class="trend-tab" data-range="90">近 90 天</button>
+          </div>
+        </div>
+        <div id="trend-svg-wrap"></div>
+      </div>
+
+      <div class="glass settings-section">
+        <h3>📜 已读古文</h3>
+        <div id="prog-classic-list"></div>
+      </div>
+    </section>
+
+    <!-- ============ Page: 成就 ============ -->
+    <section class="page" id="page-achievement">
+      <div class="glass punch-header">
+        <div class="punch-header-row">
+          <div style="width:60px;"></div>
+          <div class="punch-title-block">
+            <div class="punch-title">成就</div>
+            <div class="punch-subtitle">12 张里程碑卡牌</div>
+          </div>
+          <div style="width:60px;"></div>
+        </div>
+      </div>
+      <div class="achievement-grid" id="achievement-grid"></div>
+    </section>
+
+    <!-- ============ Page: 设置 ============ -->
+    <section class="page" id="page-settings">
+      <div class="glass punch-header">
+        <div class="punch-header-row">
+          <div style="width:60px;"></div>
+          <div class="punch-title-block">
+            <div class="punch-title">设置</div>
+            <div class="punch-subtitle">个性化与数据</div>
+          </div>
+          <div style="width:60px;"></div>
+        </div>
+      </div>
+
+      <div class="glass settings-section">
+        <h3>🎨 主题</h3>
+        <div class="theme-picker">
+          <div class="theme-pick active" data-theme="deep">
+            <div class="theme-pick-preview deep"></div>
+            深空玻璃
+          </div>
+          <div class="theme-pick" data-theme="polar">
+            <div class="theme-pick-preview polar"></div>
+            极地玻璃（即将推出）
+          </div>
+        </div>
+      </div>
+
+      <div class="glass settings-section">
+        <h3>⏰ 每日提醒</h3>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">提醒时间</div>
+            <div class="settings-row-sub">每日打卡前</div>
+          </div>
+          <div id="set-reminder-time" style="font-variant-numeric: tabular-nums; font-size:18px; color:var(--c-neon-cyan); font-weight:600;">20:00</div>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">每日古文目标</div>
+          </div>
+          <div id="set-classic-goal" style="font-size:18px; color:var(--c-neon-cyan); font-weight:600;">1</div>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">每日单词目标</div>
+          </div>
+          <div id="set-words-goal" style="font-size:18px; color:var(--c-neon-cyan); font-weight:600;">20</div>
+        </div>
+      </div>
+
+      <div class="glass settings-section">
+        <h3>💾 数据</h3>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:8px;">
+          <button class="btn btn-ghost btn-block" id="btn-export">导出 JSON</button>
+          <button class="btn btn-ghost btn-block" id="btn-import">导入 JSON</button>
+          <button class="btn btn-neon-pink btn-block" id="btn-reset">重置所有数据</button>
+        </div>
+      </div>
+
+      <div style="text-align:center; padding:20px; font-size:11px; color:var(--c-text-muted); letter-spacing:0.1em;">
+        v1.0 · 学习打卡 · 深空玻璃拟态
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="./assets/data/data.js"></script>
+  <script src="./assets/js/storage.js"></script>
+  <script src="./assets/js/punch.js"></script>
+  <script src="./assets/js/data-loader.js"></script>
+  <script src="./assets/js/shim.js"></script>
+  <script src="./assets/js/effects.js"></script>
+  <script src="./assets/js/ui.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (typeof boot === 'function') boot();
+      if (typeof bindWordModes === 'function') bindWordModes();
+    });
+  </script>
+</body>
+</html>

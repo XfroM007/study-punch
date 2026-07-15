@@ -37,6 +37,30 @@
   <!-- ===================== 粒子画布 ===================== -->
   <div id="particle-canvas"></div>
 
+  <!-- ===================== 欢迎引导 ===================== -->
+  <div id="welcome-overlay">
+    <div class="welcome-card">
+      <div class="welcome-icon">📚</div>
+      <div class="welcome-title">学习打卡</div>
+      <div class="welcome-desc">高三上学期古文 + 单词，离线也能练</div>
+      <div class="welcome-steps">
+        <div class="welcome-step">
+          <div class="welcome-step-num">1</div>
+          <div class="welcome-step-text">点下方 <strong>「打卡」</strong> 进入主页</div>
+        </div>
+        <div class="welcome-step">
+          <div class="welcome-step-num">2</div>
+          <div class="welcome-step-text">点 <strong>「开始今日打卡」</strong> 开始背诵</div>
+        </div>
+        <div class="welcome-step">
+          <div class="welcome-step-num">3</div>
+          <div class="welcome-step-text">完成后自动积分 + 解锁成就 🎖️</div>
+        </div>
+      </div>
+      <button class="welcome-btn" id="welcome-start">🚀 开始使用</button>
+    </div>
+  </div>
+
   <!-- ===================== 主页 ===================== -->
   <main class="app">
 
@@ -139,15 +163,15 @@
       <nav class="tabbar">
         <div class="glass tabbar-inner">
           <button class="tab-btn active" data-target="home">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10h4v-6h6v6h4V10"/></svg>
+            🏠
             <span class="tab-btn-label">打卡</span>
           </button>
           <button class="tab-btn" data-target="progress">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 14l4-4 4 4 5-7"/></svg>
+            📈
             <span class="tab-btn-label">进度</span>
           </button>
           <button class="tab-btn" data-target="achievement">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+            🏆
             <span class="tab-btn-label">成就</span>
           </button>
           <button class="tab-btn" data-target="settings">
@@ -380,6 +404,7 @@
   <script src="./assets/js/data-loader.js"></script>
   <script src="./assets/js/shim.js"></script>
   <script src="./assets/js/effects.js"></script>
+  <script src="./assets/js/welcome.js"></script>
   <script src="./assets/js/ui.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {

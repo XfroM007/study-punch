@@ -294,8 +294,9 @@ function openWordPunch() {
     mode: today.wordMode || 'en2zh',
     wrong: []
   };
-  renderWordPage();
   switchPage('word');
+  // 等页面 active 后再渲染（保证 DOM 可见）
+  setTimeout(renderWordPage, 50);
 }
 
 function renderWordPage() {
@@ -303,8 +304,8 @@ function renderWordPage() {
   if (!s) return;
   const total = s.queue.length;
   const done = s.currentIdx;
-  $('#word-progress-text').textContent = `${Math.min(done, total)} / ${total}`;
-  $('#word-progress-fill').style.width = `${(done / total) * 100}%`;
+  const el1 = $('#word-progress-text'); if (el1) el1.textContent = `${Math.min(done, total)} / ${total}`;
+  const el2 = $('#word-progress-fill'); if (el2) el2.style.width = `${(done / total) * 100}%`;
 
   // 模式按钮
   $$('.word-mode-btn').forEach(b => {
@@ -320,10 +321,10 @@ function renderWordPage() {
   const w = State.words.find(x => x.en === en);
   if (!w) { s.currentIdx++; renderWordPage(); return; }
 
-  $('#word-en').textContent = w.en;
-  $('#word-phonetic').textContent = w.phonetic;
-  $('#word-zh').textContent = w.zh;
-  $('#word-example').textContent = w.example || '';
+  const elEn = $('#word-en'); if (elEn) elEn.textContent = w.en;
+  const elPh = $('#word-phonetic'); if (elPh) elPh.textContent = w.phonetic;
+  const elZh = $('#word-zh'); if (elZh) elZh.textContent = w.zh;
+  const elEx = $('#word-example'); if (elEx) elEx.textContent = w.example || '';
 
   const area = $('#word-input-area');
   if (s.mode === 'en2zh') {

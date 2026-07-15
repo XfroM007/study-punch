@@ -236,16 +236,24 @@ function doClassicFill(item) {
   const inp = $('#classic-input');
   const val = (inp.value || '').trim();
   if (!val) { inp.focus(); return; }
-  const ok = val === item.text;
+  // 容忍标点 / 空白差异：去除全角句逗号、引号、空格后比较
+  const norm = s => String(s || '').replace(/[，。、；：？！「」""''《》（）\s]/g, '').toLowerCase();
+  const ok = norm(val) === norm(item.text);
   if (ok) {
     inp.style.borderColor = 'var(--c-neon-cyan)';
-    burstParticles($('#page-classic'));
+    if (window.PunchEffects && window.PunchEffects.particleBurst) {
+      var r = inp.getBoundingClientRect();
+      window.PunchEffects.particleBurst(r.left + r.width/2, r.top + r.height/2, { count: 24 });
+    } else {
+      burstParticles($('#page-classic'));
+    }
+    showToast('✓ 答对了！', 800);
     advanceClassic();
   } else {
     inp.style.borderColor = 'var(--c-neon-pink)';
     inp.value = '';
-    inp.placeholder = '再想想…';
-    showToast('答错了没关系，再来一次', 1000);
+    inp.placeholder = '再想想…（不需输标点）';
+    showToast('差一点点，再试试 ✨', 1000);
   }
 }
 

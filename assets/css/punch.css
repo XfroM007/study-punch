@@ -95,6 +95,28 @@
   color: var(--c-neon-pink);
   background: rgba(255, 0, 110, 0.14);
 }
+.classic-sentence-truncated {
+  color: var(--c-text-muted);
+  letter-spacing: 2px;
+  font-weight: 700;
+  opacity: 0.55;
+  cursor: help;
+}
+.classic-text-blurred {
+  filter: blur(6px);
+  pointer-events: none;
+  user-select: none;
+  transition: filter 240ms var(--ease-soft);
+}
+.classic-text-blurred::after {
+  content: "原文已隐藏，请凭记忆输入";
+  display: block;
+  text-align: center;
+  font-size: 13px;
+  color: var(--c-neon-cyan);
+  margin-top: 12px;
+  filter: blur(0);
+}
 
 .classic-input-area {
   padding: 18px 20px;

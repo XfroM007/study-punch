@@ -22,8 +22,9 @@ const DEFAULTS = {
   points: 0,
   // 已达成成就 ID 集合
   achievements: [],
-  // 生词本
-  vocab: [],
+  // 生词本 / 错题本（对齐 docs/数据结构.md 中 wrong-words 字段）
+  // 字段：{ en, wrongCount, correctStreak, lastWrong }
+  wrongWords: [],
   // 用户设置
   settings: {
     theme: 'deep',
@@ -97,19 +98,61 @@ function addAchievement(id) {
 }
 
 function addVocab(en) {
-  const list = get('vocab') || [];
-  if (!list.find(v => v.en === en)) {
-    list.push({ en, addedAt: Date.now() });
-    set('vocab', list);
+  // 兼容旧 key：从 vocab 迁移到 wrongWords
+  const oldList = get('vocab') || [];
+  if (oldList.length && !(get('wrongWords') || []).length) {
+    set('wrongWords', oldList.map(v => ({
+      en: v.en,
+      wrongCount: 1,
+      correctStreak: 0,
+      lastWrong: v.addedAt || Date.now()
+    })));
+    set('vocab', []);
   }
+  const list = get('wrongWords') || [];
+  const existing = list.find(v => v.en === en);
+  if (existing) {
+    existing.wrongCount = (existing.wrongCount || 1) + 1;
+    existing.correctStreak = 0;
+    existing.lastWrong = Date.now();
+  } else {
+    list.push({ en, wrongCount: 1, correctStreak: 0, lastWrong: Date.now() });
+  }
+  set('wrongWords', list);
   return list;
 }
 
 function removeVocab(en) {
-  const list = (get('vocab') || []).filter(v => v.en !== en);
-  set('vocab', list);
+  const list = (get('wrongWords') || []).filter(v => v.en !== en);
+  set('wrongWords', list);
   return list;
 }
+
+// 答对时调用：连续答对 N 次后自动从错题本移出
+function markWordCorrect(en) {
+  const list = get('wrongWords') || [];
+  const target = PUNISH_CONFIG.removeAfterCorrect; // 移出门槛
+  let removed = false;
+  const next = [];
+  for (const v of list) {
+    if (v.en === en) {
+      v.correctStreak = (v.correctStreak || 0) + 1;
+      v.lastWrong = v.lastWrong || Date.now();
+      if (v.correctStreak >= target) {
+        removed = true;
+        continue; // 移出
+      }
+    }
+    next.push(v);
+  }
+  set('wrongWords', next);
+  return removed;
+}
+
+const PUNISH_CONFIG = {
+  removeAfterCorrect: 3,  // 连续答对 3 次移出错题本
+  wrongRatio: 0.4         // 每日推送中错题占比
+};
 
 function exportJSON() {
   return JSON.stringify(getAll(), null, 2);
@@ -133,13 +176,13 @@ function resetAll() {
   }
 }
 
-var __x = { DEFAULTS };
+var __x = { DEFAULTS, PUNISH_CONFIG };
 // ===== 挂全局（file:// 双击运行需要） =====
 // 注：前端 agent-B 自创的 storage API（与 agent-C 命名不同，但已与 ui.js 配对）
 window.PunchStorage = {
   init: () => {},  // noop（这套存储直接读 localStorage，无需 init）
   getAll, get, set, updateToday, clearToday, recordDay,
-  addReadClassic, addAchievement, addVocab, removeVocab,
+  addReadClassic, addAchievement, addVocab, removeVocab, markWordCorrect,
   exportJSON, importJSON, resetAll,
-  DEFAULTS
+  DEFAULTS, PUNISH_CONFIG
 };

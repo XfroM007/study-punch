@@ -127,6 +127,19 @@ function updateTodayButton() {
   btn.textContent = bothDone ? '✓ 今日已完成 · 查看进度' : '开始今日打卡';
 }
 
+// ============== 今日打卡入口（智能路由） ==============
+function startTodayPunch() {
+  const today = S.get('today') || {};
+  if (!today.classicDone) {
+    openClassicPunch();
+  } else if (!today.wordDone) {
+    openWordPunch();
+  } else {
+    showToast('今日已完成 ✓', 1400);
+    switchPage('progress');
+  }
+}
+
 // ============== 古文打卡页 ==============
 function openClassicPunch() {
   const today = S.get('today') || {};
@@ -169,13 +182,15 @@ function renderClassicPage() {
   $('#classic-progress-text').textContent = `${Math.min(done, total)} / ${total}`;
   $('#classic-progress-fill').style.width = `${(done / total) * 100}%`;
 
-  // 原文逐句
-  const html = s.article.keySentences.map((sent, i) => {
+  // 原文逐句 —— 全文仅显示一半，未做过的句子隐藏（当前句也模糊）
+  const halfTotal = Math.ceil(s.article.keySentences.length / 2);
+  const visibleSentences = s.article.keySentences.slice(0, halfTotal);
+  const html = visibleSentences.map((sent, i) => {
     let cls = 'classic-sentence';
     if (i < s.currentIdx) cls += ' done';
     else if (i === s.currentIdx) cls += ' current';
-    return `<span class="${cls}" data-idx="${i}">${sent}</span>`;
-  }).join('');
+    return `<span class="${cls}" data-idx="${i}">${escapeHtml(sent)}</span>`;
+  }).join('') + `<span class="classic-sentence classic-sentence-truncated" title="下半部分隐藏·作答后逐句解锁">······</span>`;
   $('#classic-text').innerHTML = html;
 
   // 输入/选择区
@@ -198,10 +213,16 @@ function renderClassicPage() {
       </div>
     `;
     const inp = $('#classic-input');
+    const textEl = $('#classic-text');
+    const blurSource = () => textEl.classList.add('classic-text-blurred');
+    const clearBlur = () => textEl.classList.remove('classic-text-blurred');
+    inp.addEventListener('focus', blurSource);
+    inp.addEventListener('input', blurSource);
+    inp.addEventListener('blur', clearBlur);
     inp.focus();
-    const submit = () => doClassicFill(item);
+    const submit = () => { clearBlur(); doClassicFill(item); };
     $('#classic-submit').addEventListener('click', submit);
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') { clearBlur(); submit(); } });
   } else {
     const choicesHtml = item.options.map((o, i) =>
       `<button class="classic-choice" data-i="${i}">${escapeHtml(o)}</button>`
@@ -284,9 +305,9 @@ function finishClassic() {
 function openWordPunch() {
   const today = S.get('today') || {};
   if (!today.wordQueue) {
-    const queue = State.words.slice(0, 20);
-    S.updateToday({ wordQueue: queue.map(w => w.en) });
-    today.wordQueue = queue.map(w => w.en);
+    const queue = buildDailyWordQueue();
+    S.updateToday({ wordQueue: queue });
+    today.wordQueue = queue;
   }
   State.wordSession = {
     queue: today.wordQueue,
@@ -297,6 +318,44 @@ function openWordPunch() {
   switchPage('word');
   // 等页面 active 后再渲染（保证 DOM 可见）
   setTimeout(renderWordPage, 50);
+}
+
+// 每日推送：错题加权（40%）+ 新词轮转（60%）
+function buildDailyWordQueue() {
+  const cfg = S.PUNISH_CONFIG || { wrongRatio: 0.4, removeAfterCorrect: 3 };
+  const goal = (S.get('settings') || {}).dailyGoal?.words || 20;
+  const wrongList = S.get('wrongWords') || [];
+
+  // 错题按 wrongCount 降序、排重
+  const seen = new Set();
+  const weighted = [];
+  for (const v of [...wrongList].sort((a, b) => (b.wrongCount || 1) - (a.wrongCount || 1))) {
+    if (seen.has(v.en)) continue;
+    seen.add(v.en);
+    weighted.push(v.en);
+    if (weighted.length >= Math.floor(goal * cfg.wrongRatio)) break;
+  }
+
+  // 新词：避开已读古文、错题、今日已推
+  const learned = new Set(S.get('readClassic') || []);
+  const fresh = [];
+  for (const w of State.words) {
+    if (seen.has(w.en)) continue;
+    fresh.push(w.en);
+    seen.add(w.en);
+    if (fresh.length >= goal - weighted.length) break;
+  }
+
+  // 拼够 goal 个，不够则随机补
+  const out = [...weighted, ...fresh];
+  if (out.length < goal) {
+    for (const w of State.words) {
+      if (out.includes(w.en)) continue;
+      out.push(w.en);
+      if (out.length >= goal) break;
+    }
+  }
+  return out.slice(0, goal);
 }
 
 function renderWordPage() {
@@ -327,6 +386,15 @@ function renderWordPage() {
   const elEx = $('#word-example'); if (elEx) elEx.textContent = w.example || '';
 
   const area = $('#word-input-area');
+  const onCorrect = () => {
+    const removed = S.markWordCorrect(w.en);
+    if (removed) showToast('已从错题本移除 🎯', 1200);
+    advanceWord();
+  };
+  const onWrong = () => {
+    s.wrong.push(w.en);
+    P.addVocab(w.en);  // 计入错题加权池
+  };
   if (s.mode === 'en2zh') {
     const choices = P.makeWordChoices(w, State.words);
     area.innerHTML = `<div class="word-options">
@@ -338,19 +406,19 @@ function renderWordPage() {
         if (i === choices.answerIndex) {
           btn.classList.add('correct');
           $$('.word-option').forEach(b => b.disabled = true);
-          advanceWord();
+          onCorrect();
         } else {
           btn.classList.add('wrong');
           btn.disabled = true;
-          s.wrong.push(w.en);
+          onWrong();
         }
       });
     });
   } else if (s.mode === 'spelling') {
     area.innerHTML = `
       <div style="text-align:center; margin-bottom:10px;">
-        <div style="font-size:14px; color:var(--c-text-secondary);">拼写</div>
-        <div style="font-size:18px; color:var(--c-neon-cyan); font-weight:600; margin-top:4px;">${escapeHtml(w.zh)}</div>
+        <div style="font-size:14px; color:var(--text-secondary);">拼写</div>
+        <div style="font-size:18px; color:var(--neon-cyan); font-weight:600; margin-top:4px;">${escapeHtml(w.zh)}</div>
       </div>
       <input class="input word-spelling-input" id="word-spell-input" placeholder="拼写单词…" autocomplete="off" />
       <button class="btn btn-primary btn-block" style="margin-top:10px;" id="word-spell-btn">提交</button>
@@ -360,11 +428,11 @@ function renderWordPage() {
       const v = ($('#word-spell-input').value || '').trim().toLowerCase();
       if (!v) return;
       if (v === w.en.toLowerCase()) {
-        advanceWord();
+        onCorrect();
       } else {
-        s.wrong.push(w.en);
+        onWrong();
         showToast(`正确拼写：${w.en}`, 1400);
-        advanceWord();
+        advanceWord();  // 拼写模式显示答案后跳过（可手动返回复习）
       }
     };
     $('#word-spell-btn').addEventListener('click', submit);
@@ -382,11 +450,11 @@ function renderWordPage() {
         if (opts[i].en === w.en) {
           btn.classList.add('correct');
           $$('.word-option').forEach(b => b.disabled = true);
-          advanceWord();
+          onCorrect();
         } else {
           btn.classList.add('wrong');
           btn.disabled = true;
-          s.wrong.push(w.en);
+          onWrong();
         }
       });
     });
@@ -645,6 +713,7 @@ window.App = {
   openClassicPunch,
   openWordPunch,
   switchPage,
+  startTodayPunch,
   bindWordModes,
   boot
 };

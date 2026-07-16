@@ -92,7 +92,7 @@ function renderHome() {
   $('#today-author').textContent = `${article.dynasty} · ${article.author}`;
   $('#today-desc').innerHTML = article.keySentences
     .slice(0, 2)
-    .map(s => `<div>${s}</div>`)
+    .map(s => `<div>${typeof s === 'string' ? escapeHtml(s) : escapeHtml(s.text || '')}</div>`)
     .join('');
 
   // 进度
@@ -164,7 +164,9 @@ function buildClassicItems(article) {
   // 交替句子填空 + 选择题
   const items = [];
   article.keySentences.forEach((s, i) => {
-    items.push({ type: 'fill', text: s, idx: i });
+    // 兼容字符串数组和 { text, translation, level } 对象数组两种数据格式
+    const text = typeof s === 'string' ? s : (s && s.text ? s.text : String(s || ''));
+    items.push({ type: 'fill', text, idx: i });
   });
   (article.keyChoices || []).forEach((c, i) => {
     items.push({ type: 'choice', q: c.q, options: c.options, answer: c.answer, idx: i });
@@ -189,7 +191,8 @@ function renderClassicPage() {
     let cls = 'classic-sentence';
     if (i < s.currentIdx) cls += ' done';
     else if (i === s.currentIdx) cls += ' current';
-    return `<span class="${cls}" data-idx="${i}">${escapeHtml(sent)}</span>`;
+    const text = typeof sent === 'string' ? sent : (sent.text || '');
+    return `<span class="${cls}" data-idx="${i}">${escapeHtml(text)}</span>`;
   }).join('') + `<span class="classic-sentence classic-sentence-truncated" title="下半部分隐藏·作答后逐句解锁">······</span>`;
   $('#classic-text').innerHTML = html;
 
@@ -298,7 +301,7 @@ function advanceClassic() {
 function finishClassic() {
   P.completeClassic(State.classicSession.article.id);
   $('#classic-text').innerHTML = State.classicSession.article.keySentences
-    .map(s => `<span class="classic-sentence done">${s}</span>`).join('');
+    .map(s => `<span class="classic-sentence done">${typeof s === 'string' ? escapeHtml(s) : escapeHtml(s.text || '')}</span>`).join('');
   $('#classic-input-area').innerHTML = `
     <div style="text-align:center; padding:24px 0;">
       <div style="font-size:48px; margin-bottom:12px;">🎉</div>

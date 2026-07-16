@@ -257,8 +257,13 @@ function doClassicFill(item) {
   const inp = $('#classic-input');
   const val = (inp.value || '').trim();
   if (!val) { inp.focus(); return; }
-  // 容忍标点 / 空白差异：去除全角句逗号、引号、空格后比较
-  const norm = s => String(s || '').replace(/[，。、；：？！「」""''《》（）\s]/g, '').toLowerCase();
+  // 容忍标点/空白差异：去除全+半角标点、引号、空格、HTML 实体后比较
+  const norm = s => String(s || '')
+    .replace(/[，。、；：？！「」""''《》（）\s]/g, '')
+    .replace(/[,.!?;:'"()\u3000]/g, '')      // 半角标点 + 全角空格 U+3000
+    .replace(/&[a-z]+;|&#\d+;/gi, '')        // HTML 实体 (&quot; &#39; 等)
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')   // 零宽字符
+    .toLowerCase();
   const ok = norm(val) === norm(item.text);
   if (ok) {
     inp.style.borderColor = 'var(--c-neon-cyan)';
@@ -272,9 +277,10 @@ function doClassicFill(item) {
     advanceClassic();
   } else {
     inp.style.borderColor = 'var(--c-neon-pink)';
+    // 不清空输入，改高亮正确答案，便于学习
     inp.value = '';
-    inp.placeholder = '再想想…（不需输标点）';
-    showToast('差一点点，再试试 ✨', 1000);
+    inp.placeholder = '参考答案：' + item.text;
+    showToast('差一点，参考答案已给出', 1400);
   }
 }
 

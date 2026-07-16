@@ -166,13 +166,53 @@ function buildClassicItems(article) {
   article.keySentences.forEach((s, i) => {
     // 兼容字符串数组和 { text, translation, level } 对象数组两种数据格式
     const text = typeof s === 'string' ? s : (s && s.text ? s.text : String(s || ''));
-    items.push({ type: 'fill', text, idx: i });
+    // 随机挖 2 个关键字作为 cloze 填空点
+    const blanks = pickBlanks(text, 2);
+    items.push({ type: 'fill', text, blanks, idx: i });
   });
   (article.keyChoices || []).forEach((c, i) => {
     items.push({ type: 'choice', q: c.q, options: c.options, answer: c.answer, idx: i });
   });
   return items;
 }
+
+// 从句子中随机选 2 个关键字作 cloze 挖空点
+// 排除标点/虚词，优先选实词（2-4 字）
+function pickBlanks(text, n) {
+  const tokens = [];
+  let buf = '';
+  for (const ch of text) {
+    if (/[\u4e00-\u9fff]/.test(ch)) { buf += ch; }
+    else { if (buf) tokens.push(buf); buf = ''; }
+  }
+  if (buf) tokens.push(buf);
+  // 排除单字虚词
+  const stop = new Set(['之','乎','者','也','矣','焉','哉','其','而','于','以','为','则','是','在','有','无','所','以']);
+  const candidates = tokens.filter(t => t.length >= 2 || !stop.has(t));
+  if (candidates.length === 0) return [];
+  // 随机抽 n 个
+  const pool = [...candidates];
+  const out = [];
+  for (let i = 0; i < Math.min(n, pool.length); i++) {
+    const idx = Math.floor(Math.random() * pool.length);
+    out.push(pool[idx]);
+    pool.splice(idx, 1);
+  }
+  return out;
+}
+
+// 把句子中的关键字替换为 ___，返回 HTML
+function maskSentence(text, blanks) {
+  if (!blanks || blanks.length === 0) return escapeHtml(text);
+  let html = escapeHtml(text);
+  for (const b of blanks) {
+    // 用 token 边界匹配，避免错位
+    const re = new RegExp(b.split('').map(c => escapeRegExp(c)).join(''), 'g');
+    html = html.replace(re, `<span class="blank-slot" data-blank="${escapeHtml(b)}">____</span>`);
+  }
+  return html;
+}
+function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
 function renderClassicPage() {
   const s = State.classicSession;
@@ -205,27 +245,37 @@ function renderClassicPage() {
   }
   const area = $('#classic-input-area');
   if (item.type === 'fill') {
+    const blanks = item.blanks || [];
+    const inputsHtml = blanks.map((b, i) =>
+      `<span class="blank-input-wrap"><input class="input blank-input" data-i="${i}" data-answer="${escapeHtml(b)}" placeholder="${b.length}字" autocomplete="off" maxlength="${b.length + 2}" /><span class="blank-hint">${escapeHtml(b)}</span></span>`
+    ).join('');
     area.innerHTML = `
       <div class="classic-prompt">
-        <div>请补全第 <span class="text-cyan">${item.idx + 1}</span> 句</div>
-        <div class="classic-prompt-zh">${escapeHtml(item.text)}</div>
+        <div>请补全第 <span class="text-cyan">${item.idx + 1}</span> 句关键字</div>
+        <div class="classic-prompt-zh">${maskSentence(item.text, blanks)}</div>
       </div>
-      <div class="classic-input-row">
-        <input class="input" id="classic-input" placeholder="输入原文…" autocomplete="off" />
-        <button class="btn btn-primary" id="classic-submit">提交</button>
-      </div>
+      <div class="classic-input-row classic-blanks-row">${inputsHtml}</div>
+      <button class="btn btn-primary btn-block" id="classic-submit" style="margin-top:10px;">提交</button>
     `;
-    const inp = $('#classic-input');
     const textEl = $('#classic-text');
     const blurSource = () => textEl.classList.add('classic-text-blurred');
     const clearBlur = () => textEl.classList.remove('classic-text-blurred');
-    inp.addEventListener('focus', blurSource);
-    inp.addEventListener('input', blurSource);
-    inp.addEventListener('blur', clearBlur);
-    inp.focus();
-    const submit = () => { clearBlur(); doClassicFill(item); };
-    $('#classic-submit').addEventListener('click', submit);
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter') { clearBlur(); submit(); } });
+    $$('.blank-input').forEach((inp, i) => {
+      inp.addEventListener('focus', blurSource);
+      inp.addEventListener('input', blurSource);
+      inp.addEventListener('blur', clearBlur);
+      if (i === 0) setTimeout(() => inp.focus(), 50);
+      // Enter 跳下一个 / 提交
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const next = $$('.blank-input')[i + 1];
+          if (next) next.focus();
+          else doClassicFill(item);
+        }
+      });
+    });
+    $('#classic-submit').addEventListener('click', () => { clearBlur(); doClassicFill(item); });
   } else {
     const choicesHtml = item.options.map((o, i) =>
       `<button class="classic-choice" data-i="${i}">${escapeHtml(o)}</button>`
@@ -257,37 +307,36 @@ function renderClassicPage() {
 }
 
 function doClassicFill(item) {
-  const inp = $('#classic-input');
-  const val = (inp.value || '').trim();
-  if (!val) { inp.focus(); return; }
-  // 容忍标点/空白差异：去除全+半角标点、引号、空格、HTML 实体后比较
-  const norm = s => String(s || '')
-    .replace(/[，。、；：？！「」""''《》（）\s]/g, '')
-    .replace(/[,.!?;:'"()\u3000]/g, '')      // 半角标点 + 全角空格 U+3000
-    .replace(/&[a-z]+;|&#\d+;/gi, '')        // HTML 实体 (&quot; &#39; 等)
-    .replace(/[\u200B-\u200D\uFEFF]/g, '')   // 零宽字符
-    .toLowerCase();
-  const ok = norm(val) === norm(item.text);
-  if (ok) {
-    inp.style.borderColor = 'var(--c-neon-cyan)';
+  const inputs = $$('.blank-input');
+  if (inputs.length === 0) return;
+  const blanks = item.blanks || [];
+  let allCorrect = true;
+  const wrongList = [];
+  inputs.forEach((inp, i) => {
+    const answer = blanks[i] || '';
+    const val = (inp.value || '').trim();
+    if (val === answer) {
+      inp.style.borderColor = 'var(--c-neon-cyan)';
+      inp.classList.add('blank-correct');
+    } else {
+      inp.style.borderColor = 'var(--c-neon-pink)';
+      inp.classList.add('blank-wrong');
+      allCorrect = false;
+      wrongList.push(`空${i + 1}: 你填「${val || '（空）'}」=「${answer}」`);
+    }
+  });
+  if (allCorrect) {
     if (window.PunchEffects && window.PunchEffects.particleBurst) {
-      var r = inp.getBoundingClientRect();
-      window.PunchEffects.particleBurst(r.left + r.width/2, r.top + r.height/2, { count: 24 });
+      var r = $('#classic-submit').getBoundingClientRect();
+      window.PunchEffects.particleBurst(r.left + r.width/2, r.top, { count: 24 });
     } else {
       burstParticles($('#page-classic'));
     }
     showToast('✓ 答对了！', 800);
     advanceClassic();
   } else {
-    inp.style.borderColor = 'var(--c-neon-pink)';
-    // 不清空输入，改高亮正确答案，便于学习
-    inp.value = '';
-    inp.placeholder = '参考答案：' + item.text;
-    showToast('差一点，参考答案已给出', 1400);
-    // 调试：把两份 codepoint 打出来到 console + 屏幕
-    const dbg = `你的输入(${val.length}): ${[...val].map(c => 'U+' + c.codePointAt(0).toString(16).toUpperCase()).join(' ')}\n参考答案(${item.text.length}): ${[...item.text].map(c => 'U+' + c.codePointAt(0).toString(16).toUpperCase()).join(' ')}`;
-    console.warn('[古文比对失败]', dbg);
-    showDebugPanel('古文比对失败', dbg);
+    showToast(`差一点 ${wrongList.length} 个空需要修正`, 1400);
+    console.warn('[cloze 错]', wrongList.join(' | '));
   }
 }
 

@@ -281,6 +281,10 @@ function doClassicFill(item) {
     inp.value = '';
     inp.placeholder = '参考答案：' + item.text;
     showToast('差一点，参考答案已给出', 1400);
+    // 调试：把两份 codepoint 打出来到 console + 屏幕
+    const dbg = `你的输入(${val.length}): ${[...val].map(c => 'U+' + c.codePointAt(0).toString(16).toUpperCase()).join(' ')}\n参考答案(${item.text.length}): ${[...item.text].map(c => 'U+' + c.codePointAt(0).toString(16).toUpperCase()).join(' ')}`;
+    console.warn('[古文比对失败]', dbg);
+    showDebugPanel('古文比对失败', dbg);
   }
 }
 
@@ -712,6 +716,18 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[c]));
+}
+
+// ============== 调试面板（错时跳 codepoint） ==============
+function showDebugPanel(title, body) {
+  let el = document.getElementById('__debug_panel__');
+  if (!el) {
+    el = document.createElement('pre');
+    el.id = '__debug_panel__';
+    el.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;max-height:40vh;overflow:auto;padding:12px;background:rgba(0,0,0,0.92);color:#00f5ff;font:11px/1.5 ui-monospace,monospace;white-space:pre-wrap;word-break:break-all;border:1px solid #ff006e;border-radius:8px;z-index:99999;';
+    document.body.appendChild(el);
+  }
+  el.textContent = `[${title}]\n${body}`;
 }
 
 // ============== 暴露给 inline 入口 ==============
